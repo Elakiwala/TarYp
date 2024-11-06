@@ -33,3 +33,4 @@ def remove (self: Self):
 if __name__=="__main__":
     heap = []
     print(heap.add_or_replace2([(1, 2), (2, 3)], 1, 1))
+    rezjrkezl
