@@ -129,7 +129,7 @@ class Dijkstra (Player):
                     queue[i] = (key, value)
                 return
         queue.append((key, value))
-
+    
 
     @override
     def remove (self: Self):
@@ -265,7 +265,7 @@ class Dijkstra (Player):
 
 if __name__=="__main__":
     heap = []
-    print(heap.add_or_replace2([(1, 2), (2, 3)], 1, 1))
+    print(heap.add_or_replace3([(1, 2), (2, 3)], 1, 1))
     """# Create a min-heap
     heap = []
     
