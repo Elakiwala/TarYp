@@ -18,7 +18,7 @@ def add_or_replace2(queue: List, key:Any, value:int)->List:
             return
     queue.append((key, value))
 
-def add_or_replace(self: Self, key:Any, value:int)->Any:
+def add_or_replace(self: Self, queue: List, key:Any, value:int)->Any:
     """
     This method adds or replaces an element in a min-heap.
     In:
@@ -62,8 +62,8 @@ if __name__=="__main__":
     heap = [(1, 2), (2, 3)]
     #print(heap.add_or_replace2( 1, 1))
     print(heap)
-    print(heap.add_or_replace( 1, 1))
+    print(heap.add_or_replace(1, 1))
     print(heap)
     print(heap.remove())
     print(heap)
-    
+
