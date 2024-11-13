@@ -35,123 +35,129 @@ class Dijkstra(Player):
     #                                                                CONSTRUCTOR                                                                #
     #############################################################################################################################################
 
-    def __init__ ( self:     Self,
-                   *args:    Any,
-                   **kwargs: Any
-                 ) ->        Self:
-        """
-            Constructor of the class.
-            Arguments *args and **kwargs are used to pass arguments to the parent constructor.
-        """
-        super().__init__(*args, **kwargs)
-        self.queue = []  # Priority queue to use as min-heap
-        self.distances = {}
+    def __init__(self):
+        super().__init__()
+        self.elements = []  # Initialize elements as an empty list for min-heap
+        self.distances = {}  # To store shortest path distances
         self.routing_table = {}
+
 
         print("Constructor")
 
     #############################################################################################################################################
     #                                                               PYRAT METHODS                                                               #
     #############################################################################################################################################
-
     @override
-    def preprocessing (self: Self, maze: Maze, game_state: GameState) -> None:
+    def preprocessing ( self:       Self,
+                        maze:       Maze,
+                        game_state: GameState,
+                      ) ->          None:
+        
         """
-            Called once at the beginning of the game.
+            This method redefines the method of the parent class.
+            It is called once at the beginning of the game.
+            In:
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
+            Out:
+                * None.
         """
-        initial_location = game_state.player_locations[self.name]
-        cheese_location = game_state.cheese[0]
+        
+        # Print phase of the game
+        print("Preprocessing")
 
-        # Perform Dijkstra traversal from the initial location
+    """
+    @override
+    def preprocessing(self: Self, maze: Maze, game_state: GameState) -> None:
+        print("Starting preprocessing...")
+        
+        initial_location = game_state.player_locations[self.name]
+        print(f"Initial location: {initial_location}")
+
+        # Adjusted to use vertices and neighbors methods
         self.distances, self.routing_table = self.traversal(maze, initial_location)
 
-        # Find the shortest route to the cheese
-        route = self.find_route(self.routing_table, initial_location, cheese_location)
-        self.actions = maze.locations_to_actions(route)
-
-        print("Preprocessing")
+        print("Preprocessing completed.")"""
 
     #############################################################################################################################################
 
     @override
     def add_or_replace(self: Self, key: Integral, value: int) -> None:
-        """
-            Adds or replaces an element in the priority queue.
-            Ensures the element with minimum value is at the root of the heap.
-        """
-        # Check if the key already exists and replace if a lower value is found
         for i, (v, k) in enumerate(self.queue):
             if k == key:
                 if value < v:
                     self.queue[i] = (value, key)
-                    heapq.heapify(self.queue)  # Re-establish min-heap property
+                    heapq.heapify(self.queue)
                 return
-        # Otherwise, add the new element
         heapq.heappush(self.queue, (value, key))
 
     @override
     def remove(self: Self) -> Tuple[Integral, int]:
-        """
-            Removes and returns the element with the smallest value in the priority queue.
-        """
+        if not self.queue:
+            return None, None
         value, key = heapq.heappop(self.queue)
         return key, value
 
     #############################################################################################################################################
 
     @override
-    def traversal(self: Self, graph: Graph, source: Integral) -> Tuple[Dict[Integral, int], Dict[Integral, Optional[Integral]]]:
-        """
-            Performs Dijkstra's algorithm on the graph from a source vertex.
-            Returns distances and routing_table.
-        """
-        self.distances = {vertex: float('inf') for vertex in graph}
-        self.distances[source] = 0
-        self.routing_table = {vertex: None for vertex in graph}
-        
-        # Initialize the priority queue
-        self.queue = [(0, source)]  # (distance, vertex)
+    def traversal(self, maze: Maze, source: Integral) -> Tuple[Dict[Integral, Integral], Dict[Integral, Optional[Integral]]]:
+        distances = {vertex: float('inf') for vertex in range(maze.nb_vertices)}
+        distances[source] = 0
+        routing_table = {vertex: None for vertex in range(maze.nb_vertices)}
+        self.add_or_replace(source, 0)  # Ajoute la source dans le tas min avec une distance de 0
 
-        while self.queue:
+        while self.elements:
             current_vertex, current_distance = self.remove()
 
-            # Skip if we've found a shorter path already
-            if current_distance > self.distances[current_vertex]:
-                continue
-
-            for neighbor, weight in graph.get_neighbors(current_vertex):
+            # Exploration des voisins
+            for neighbor, weight in maze.get_neighbors(current_vertex):
                 distance = current_distance + weight
-                if distance < self.distances[neighbor]:  # Found a shorter path
-                    self.distances[neighbor] = distance
-                    self.routing_table[neighbor] = current_vertex
+
+                # Si un chemin plus court est trouvé
+                if distance < distances[neighbor]:
+                    distances[neighbor] = distance
+                    routing_table[neighbor] = current_vertex
                     self.add_or_replace(neighbor, distance)
 
-        return self.distances, self.routing_table
+        return distances, routing_table
 
-    @override
-    def find_route(self: Self, routing_table: Dict[Integral, Optional[Integral]], source: Integral, target: Integral) -> List[Integral]:
-        """
-            Finds the shortest route from source to target using the routing table.
-        """
-        route = []
-        current = target
-        while current is not None:
-            route.append(current)
-            current = routing_table[current]
-        route.reverse()
-        return route
 
-    #############################################################################################################################################
-
+    
     @override
     def turn(self: Self, maze: Maze, game_state: GameState) -> Action:
-        """
-            Returns an action to perform at each turn of the game.
-        """
+        # Placeholder: the player does nothing for now
         print("Turn", game_state.turn)
-        if self.actions:
-            return self.actions.pop(0)
-        return Action.NOTHING
+
+        # Move towards the closest cheese
+        cheeses = game_state.cheeses
+        if len(cheeses) == 0:
+            return Action.NOTHING  # No cheese available
+
+        # Find the closest cheese using the distances computed during preprocessing
+        closest_cheese = min(cheeses, key=lambda cheese: self.distances.get(cheese, float('inf')))
+        route = self.find_route(self.routing_table, game_state.player_locations[self.name], closest_cheese)
+
+        # Determine the next move to get closer to the cheese
+        if len(route) < 2:
+            return Action.NOTHING  # Already at the target or no path found
+
+        next_move = route[1]
+        current_position = game_state.player_locations[self.name]
+
+        # Map next position to an action
+        if next_move == (current_position[0] + 1, current_position[1]):
+            return Action.RIGHT
+        elif next_move == (current_position[0] - 1, current_position[1]):
+            return Action.LEFT
+        elif next_move == (current_position[0], current_position[1] + 1):
+            return Action.DOWN
+        elif next_move == (current_position[0], current_position[1] - 1):
+            return Action.UP
+        else:
+            return Action.NOTHING
+
 
     #############################################################################################################################################
 

@@ -16,6 +16,7 @@
 from typing import *
 from typing_extensions import *
 from numbers import *
+import heapq    
 
 # PyRat imports
 from pyrat import Player, Maze, GameState, Action, Graph
@@ -83,37 +84,26 @@ class Dijkstra (Player):
                 * None.
         """
         
+        # Get the initial location of the player
+        initial_location = game_state.player_locations[self.name]
+
+        # Get the location of the cheese
+        cheese_location = game_state.cheese[0]
+
+        # Perform a Dijkstra     traversal from the initial location
+        distances, routing_table = self.traversal(maze, initial_location)[1], self.traversal(maze, initial_location)[0]
+
+        # Find the route from the initial location to the cheese location
+        route = self.find_route(routing_table, initial_location, cheese_location)
+
+        # Convert the route to actions
+        self.actions = maze.locations_to_actions(route)
         # Print phase of the game
         print("Preprocessing")
 
     #############################################################################################################################################
     @override
-    def add_or_replace(self : Self,
-                        key: Any,
-                        value: int) -> None:
-    
-        # We check if the key is already in the heap
-        index = None
-        i = 0
-        for i in range(len(self.elements)):
-            if self.elements[i][0] == key:
-                index = i
-                break
-            i += 1
-        
-        # If the key is already in the heap, we remove the previous element if the new value is lower
-        add_new_element = True
-        if index is not None:
-            if value < self.elements[index][1]:
-                del self.elements[index]
-            else:
-                add_new_element = False
-
-        # We add the new element
-        if add_new_element:
-            self.elements.append((key, value))
-
-    def add_or_replace2(self: Self, queue: List,key:int, value:int)->List:
+    def add_or_replace2(self: Self, queue: List, key:int, value:int)->List:
         """
             This method adds or replaces an element in a min-heap.
             In:
@@ -123,26 +113,38 @@ class Dijkstra (Player):
             Out:
                 * List.
         """
-        for i, (k, v) in enumerate(queue):
-            if k == key:
-                if value < v:
-                    queue[i] = (key, value)
-                return
-        queue.append((key, value))
-    
+        # We check if the key is already in the heap
+        index = None
+        for i in range(len(queue)):
+            if queue[i][0] == key:
+                index = i
+                break
+        
+        # If the key is already in the heap, we remove the previous element if the new value is lower
+        add_new_element = True
+        if index is not None:
+            if value < queue[index][1]:
+                queue.pop(index)
+            else:
+                add_new_element = False
+
+        # We add the new element
+        if add_new_element:
+            queue.append((key, value))
+        return queue
 
     @override
-    def remove (self: Self):
+    def remove (self: Self, queue: List)->Tuple:
 
         # We find the element with the smallest value
         min_index = 0
-        for i in range(1, len(self.elements)):
-            if self.elements[i][1] < self.elements[min_index][1]:
+        for i in range(1, len(queue)):
+            if queue[i][1] < queue[min_index][1]:
                 min_index = i
 
         # We remove the element with the smallest value
-        key, value = self.elements[min_index]
-        del self.elements[min_index]
+        key, value = queue[min_index]
+        del queue[min_index]
 
         # We return the key and value of the element removed
         return key, value
@@ -200,7 +202,7 @@ class Dijkstra (Player):
     def traversal ( self:   Self,
                 graph:  Graph,
                 source: Integral
-              ) ->      Tuple[Dict[Integral, Integral], Dict[Integral, Optional[Integral]]]:
+              ) ->      List[Tuple[int, int]]:
 
         """
             This method performs a Dijkstra traversal of a graph.
@@ -217,25 +219,24 @@ class Dijkstra (Player):
                 * routing_table: The routing table, that is, 
                 the parent of each vertex in the traversal (None for the source).
         """
-        distances = {vertex: float('inf') for vertex in graph}
-        distances[source] = 0
-        routing_table = {vertex: None for vertex in graph}
+        #distances = {vertex: float('inf') for vertex in graph}
+        #distances[source] = 0
+        #routing_table = {vertex: None for vertex in graph}
         min_heap = []
-        min_heap.add_or_replace(source, 0)
+        min_heap = self.add_or_replace2(min_heap, source, 0)
 
         while not(len(min_heap)==0):
-            current_distance, current_vertex = min_heap.remove()
+            current_vertex, current_distance = self.remove(min_heap)
 
-            for neighbor, weight in graph[current_vertex]:
-                distance = current_distance + weight
+            for neighbor in graph.get_neighbors(current_vertex):
+                distance = current_distance + graph.get_weight(current_vertex, neighbor)
+                min_heap = self.add_or_replace2(min_heap, neighbor, distance)
 
-                min_heap.add_or_replace(neighbor, distance)
-
-        return distances, routing_table
+        return min_heap
 
     @override
     def find_route ( self:          Self,
-                 routing_table: Dict[Integral, Optional[Integral]],
+                 min_heap:      List[int],
                  source:        Integral,
                  target:        Integral
                ) ->             List[Integral]:
@@ -251,21 +252,30 @@ class Dijkstra (Player):
                 * route: The route from the source to the target.
         """
         route = []
+        road = []
         current = target
+        for i in range(len(min_heap)):
+            route.append(min_heap[i][0])
 
         while current is not None:
-            route.append(current)
-            current = routing_table[current]
+            road.append(current)
+            current = route[current]
 
-        route.reverse()
-        return route
+        road.reverse()
+        return road
     
 #####################################################################################################################################################
 #####################################################################################################################################################
 
 if __name__=="__main__":
     heap = []
-    print(heap.add_or_replace3([(1, 2), (2, 3)], 1, 1))
+    player = Dijkstra()
+    heap = player.add_or_replace2(heap, 1, 50)
+    print(heap)
+    heap2 = [(1, 50), (2, 22), (3, 10)]
+    player.remove(heap2)
+    print(heap2)
+
     """# Create a min-heap
     heap = []
     
