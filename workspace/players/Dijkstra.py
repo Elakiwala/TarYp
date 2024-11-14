@@ -16,7 +16,9 @@
 from typing import *
 from typing_extensions import *
 from numbers import *
-import heapq    
+import heapq 
+from typing import Dict, Tuple, Optional
+from numbers import Integral   
 
 # PyRat imports
 from pyrat import Player, Maze, GameState, Action, Graph
@@ -92,9 +94,9 @@ class Dijkstra (Player):
         print("Debut cheese_location")
         cheese_location = game_state.cheese[0]
         print("Fin cheese_location")
-        # Perform a Dijkstra     traversal from the initial location
+        # Perform a Dijkstra traversal from the initial location
         print("Debut traversal")
-        routing_table = self.traversal(maze, initial_location)
+        distances, routing_table = self.traversal(maze, initial_location)
         print("Fin traversal")
         # Find the route from the initial location to the cheese location
         print("Debut find_route")   
@@ -133,18 +135,19 @@ class Dijkstra (Player):
 
         # We find the element with the smallest value
         min_index = None
-        min_kay = None
+        min_key = None
         for key, value in queue.items():
             if value is not None:
                 if min_index is None or value < min_index:
                     min_index = value
-                    min_kay = key
+                    min_key = key
 
         # We remove the element with the smallest value
-        if min_kay is not None:
+        if min_key is not None:
             # Supprime l'élément ayant la plus petite valeur et retourne sa clé et sa valeur
-            value = queue.pop(min_kay)
-        return min_kay, value  
+            value = queue.pop(min_key)
+            return min_key, value
+        return None, None
     
    
     def turn ( self:    Self,
@@ -166,9 +169,13 @@ class Dijkstra (Player):
 
         # Print phase of the game
         print("Turn", game_state.turn)
-
+        # Extract the next action to perform from self.actions
+        if self.actions:
+            action = self.actions.pop(0)
+        else:
+            action = Action.NOTHING
         # Return an action
-        return Action.NOTHING
+        return action
 
 #############################################################################################################################################
 
@@ -195,50 +202,80 @@ class Dijkstra (Player):
         print("Postprocessing")
 
     
-    def traversal(self: Self, graph: Graph, source: Integral) -> Dict[Integral, Optional[Integral]]:
-        #distances: Dict[Integral, int]
-        #distances[source] = 0
-        routing_table: Dict[Integral, Optional[Integral]] = {vertex: None for vertex in graph}
-        min_heap: Dict[Integral, int] = {source: 0}
+    
+
+    def traversal(self: Self,
+        graph: Graph,
+        source: Integral
+    ) -> Tuple[Dict[Integral, Integral], Dict[Integral, Optional[Integral]]]:
+        # Vérification pour s'assurer que `source` est de type Integral
+        if not isinstance(source, Integral):
+            raise TypeError("source must be of type Integral")
+
+        # Initialiser `distances`, `routing_table`, et `min_heap` avec le type `Integral`
+        zero : Integral = cast(Integral, 0)
+        distances: Dict[Integral, Integral] = {source: zero}
+        routing_table: Dict[Integral, Optional[Integral]] = {source: None}
+        min_heap: Dict[Integral, Integral] = {source: zero}
 
         while min_heap:
             current_vertex, current_distance = self.remove(min_heap)
+
+            # Vérifiez que `current_vertex` et `current_distance` sont de type `Integral`
+            if not isinstance(current_vertex, Integral) or not isinstance(current_distance, Integral):
+                raise TypeError("current_vertex and current_distance must be of type Integral")
+
             for neighbor in graph.get_neighbors(current_vertex):
+                if not isinstance(neighbor, Integral):
+                    raise TypeError("neighbor must be of type Integral")
+
                 distance = current_distance + graph.get_weight(current_vertex, neighbor)
-                #if distance < distances[neighbor]:
-                #    distances[neighbor] = distance
-                routing_table[neighbor] = current_vertex
-                self.add_or_replace2(min_heap, neighbor, distance)
 
-        return routing_table
+                if not isinstance(distance, Integral):
+                    raise TypeError("distance must be of type Integral")
 
+                # Si une distance plus courte vers `neighbor` est trouvée
+                if neighbor not in distances or distance < distances[neighbor]:
+                    distances[neighbor] = distance
+                    routing_table[neighbor] = current_vertex
+                    min_heap = self.add_or_replace2(min_heap, neighbor, distance)
+
+        return distances, routing_table
     
-    def find_route ( self:          Self,
-                 min_heap:      Dict[Integral, Optional[Integral]],
-                 source:        Integral,
-                 target:        Integral
-               ) ->             List[Integral]:
-
+    def find_route(self: Self,
+        routing_table: Dict[Integral, Optional[Integral]],  # Table de routage générée par Dijkstra
+        source: Integral,
+        target: Integral
+        ) -> List[Integral]:
+        
         """
-            This method finds the route from the source to the target using the routing table.
-            In:
-                * self:          Reference to the current object.
-                * routing_table: The routing table.
-                * source:        The source vertex.
-                * target:        The target vertex.
-            Out:
-                * route: The route from the source to the target.
+        Cette fonction trouve le plus court chemin entre la source et la cible en utilisant
+        la table de routage générée par Dijkstra.
+        Args:
+        routing_table: Dictionnaire contenant le prédécesseur de chaque nœud dans le plus
+                    court chemin depuis la source.
+        source: Le nœud de départ.
+        target: Le nœud de destination.
+        Returns:
+        Une liste représentant le chemin du nœud source au nœud cible.
         """
-        print("Debut find_route")
-        route = []
-        current = target
-        while current is not None:
-            route.append(current)
-            current = route[current]
 
-        route.reverse()
+        # Vérification pour s'assurer que `source` et `target` sont de type Integral
+        if not isinstance(source, Integral) or not isinstance(target, Integral):
+            raise TypeError("source and target must be of type Integral")
+        
+        # Initialiser `route` avec le type `Integral`
+        route: List[Integral] = []
+        current_vertex: Optional[Integral] = target  # Autorise `current` à être None
+
+
+        # Trouver le chemin du nœud cible au nœud source
+        while current_vertex is not None:
+            route.insert(0, current_vertex)
+            current_vertex = routing_table[current_vertex]
+
         return route
-    
+      
 #####################################################################################################################################################
 #####################################################################################################################################################
 
