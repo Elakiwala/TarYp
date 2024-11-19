@@ -1,8 +1,8 @@
 # Students
 
-- Responsible of the codes: <LANSALOT>
-- Responsible of the documentation: <KHOURY>
-- Responsible of the unit tests: <HENRY>
+- Responsible of the codes: LANSALOT
+- Responsible of the documentation:  KHOURY
+- Responsible of the unit tests: HENRY
 
 
 
