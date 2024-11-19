@@ -1,6 +1,6 @@
-#####################################################################################################################################################
-######################################################################## INFO #######################################################################
-#####################################################################################################################################################
+####################################################################################################
+############################################## INFO ################################################
+####################################################################################################
 
 """
     This file contains useful elements to define a particular player.
@@ -8,24 +8,21 @@
     Please refer to example games to see how to do it properly.
 """
 
-#####################################################################################################################################################
-###################################################################### IMPORTS ######################################################################
-#####################################################################################################################################################
-
+####################################################################################################
+############################################ IMPORTS ###############################################
+####################################################################################################
 # External imports
-from typing import *
-from typing_extensions import *
-from numbers import *
-import heapq 
-from typing import Dict, Tuple, Optional
-from numbers import Integral   
+from typing import Dict, Tuple, Optional, List
+from numbers import Integral
+from typing_extensions import cast, Any, Self
+
 
 # PyRat imports
 from pyrat import Player, Maze, GameState, Action, Graph
 
-#####################################################################################################################################################
-###################################################################### CLASSES ######################################################################
-#####################################################################################################################################################
+#############################################################################################
+############################################ CLASSES ########################################
+#############################################################################################
 
 class Dijkstra (Player):
 
@@ -36,19 +33,20 @@ class Dijkstra (Player):
         Method "turn" is mandatory.
     """
 
-    #############################################################################################################################################
-    #                                                                CONSTRUCTOR                                                                #
-    #############################################################################################################################################
+    #########################################################################################
+    #                                      CONSTRUCTOR                                      #
+    #########################################################################################
 
     def __init__ ( self:     Self,
                    *args:    Any,
                    **kwargs: Any
-                 ) ->        Self:
+                 ) ->        None:
 
         """
             This function is the constructor of the class.
             When an object is instantiated, this method is called to initialize the object.
-            This is where you should define the attributes of the object and set their initial values.
+            This is where you should define the attributes of the object 
+            and set their initial values.
             Arguments *args and **kwargs are used to pass arguments to the parent constructor.
             This is useful not to declare again all the parent's attributes in the child class.
             In:
@@ -61,20 +59,19 @@ class Dijkstra (Player):
 
         # Inherit from parent class
         super().__init__(*args, **kwargs)
-        self.elements = []
+        self.elements: List = []
+        self.actions: List = []
         # Print phase of the game
         print("Constructor")
 
-    #############################################################################################################################################
-    #                                                               PYRAT METHODS                                                               #
-    #############################################################################################################################################
+    ############################################################################################
+    #                                       PYRAT METHODS                                      #
+    ############################################################################################
 
-    
     def preprocessing ( self:       Self,
                         maze:       Maze,
                         game_state: GameState,
                       ) ->          None:
-        
         """
             This method redefines the method of the parent class.
             It is called once at the beginning of the game.
@@ -96,10 +93,10 @@ class Dijkstra (Player):
         print("Fin cheese_location")
         # Perform a Dijkstra traversal from the initial location
         print("Debut traversal")
-        distances, routing_table = self.traversal(maze, initial_location)
+        routing_table = self.traversal(maze, initial_location)[1]
         print("Fin traversal")
         # Find the route from the initial location to the cheese location
-        print("Debut find_route")   
+        print("Debut find_route")
         route = self.find_route(routing_table, initial_location, cheese_location)
         print("Fin find_route")
         # Convert the route to actions
@@ -109,9 +106,11 @@ class Dijkstra (Player):
         # Print phase of the game
         print("Preprocessing")
 
-    #############################################################################################################################################
-    
-    def add_or_replace2(self: Self, queue: Dict[Integral, Any], key:Integral, value:Integral)->Dict[Integral, Integral]:
+    #########################################################################################
+    def add_or_replace2(self: Self,
+                        queue: Dict[Integral, Any],
+                        key:Integral, value:Integral
+                    )->Dict[Integral, Integral]:
         """
             This method adds or replaces an element in a min-heap.
             In:
@@ -121,18 +120,41 @@ class Dijkstra (Player):
             Out:
                 * List.
         """
-        # If the key is already in the heap, we remove the previous element if the new value is lower
-        if (key in queue):
+        # If the key is already in the heap,
+        # we remove the previous element if the new value is lower
+        if key in queue:
             if value < queue[key]:
                 queue[key]=value
 
         # We add the new elements
         else:
-            queue[key] = value 
+            queue[key] = value
         return queue
 
     def remove (self: Self, queue: Dict[Integral, Any])->Tuple:
 
+        """
+        Supprime et retourne l'élément ayant la plus petite valeur dans
+        une file de priorité implémentée sous forme de dictionnaire.
+
+        Cette méthode recherche l'élément avec la plus petite valeur dans
+        le dictionnaire `queue`, le supprime, 
+        et retourne sa clé ainsi que sa valeur associée. Si la file est vide ou
+        ne contient que des valeurs `None`, 
+        elle retourne `(None, None)`.
+
+        Args:
+            queue (Dict[Integral, Any]): Un dictionnaire représentant une file de
+            priorité, où les clés sont de type entier 
+                                        (`Integral`) et les valeurs peuvent être
+                                        de n'importe quel type.
+
+        Returns:
+            Tuple[Optional[Integral], Optional[Any]]:
+                - La clé (`min_key`) associée à la plus petite valeur.
+                - La valeur (`min_index`) correspondant à cette clé.
+                Si aucune clé valide n'existe, retourne `(None, None)`.
+        """
         # We find the element with the smallest value
         min_index = None
         min_key = None
@@ -148,8 +170,7 @@ class Dijkstra (Player):
             value = queue.pop(min_key)
             return min_key, value
         return None, None
-    
-   
+
     def turn ( self:    Self,
                maze:       Maze,
                game_state: GameState,
@@ -158,7 +179,8 @@ class Dijkstra (Player):
         """
             This method redefines the abstract method of the parent class.
             It is called at each turn of the game.
-            It returns an action to perform among the possible actions, defined in the Action enumeration.
+            It returns an action to perform among the possible actions, 
+            defined in the Action enumeration.
             In:
                 * self:       Reference to the current object.
                 * maze:       An object representing the maze in which the player plays.
@@ -177,9 +199,8 @@ class Dijkstra (Player):
         # Return an action
         return action
 
-#############################################################################################################################################
+##########################################################################################
 
-    
     def postprocessing ( self:       Self,
                          maze:       Maze,
                          game_state: GameState,
@@ -201,13 +222,36 @@ class Dijkstra (Player):
         # Print phase of the game
         print("Postprocessing")
 
-    
-    
-
     def traversal(self: Self,
         graph: Graph,
         source: Integral
     ) -> Tuple[Dict[Integral, Integral], Dict[Integral, Optional[Integral]]]:
+
+        """
+        Effectue une traversée du graphe à partir d'un sommet source en
+        utilisant l'algorithme de Dijkstra.
+
+        Cette méthode calcule les distances minimales entre le sommet
+        source et tous les autres sommets
+        atteignables du graphe, ainsi qu'une table de routage indiquant
+        le chemin le plus court vers chaque sommet.
+
+        Args:
+            graph: Le graphe à parcourir. Il doit fournir une méthode
+            `get_neighbors(vertex)` qui retourne
+                        les voisins d'un sommet, et une méthode `get_weight(u, v)`
+                        qui retourne le poids de l'arête (u, v).
+            source: Le sommet source à partir duquel la traversée commence. 
+                            Il doit être de type entier (Integral).
+
+        Returns:
+            Tuple[Dict[Integral, Integral], Dict[Integral, Optional[Integral]]]: 
+                - `distances`: Un dictionnaire associant à chaque sommet atteignable
+                sa distance minimale depuis le sommet source.
+                - `routing_table`: Un dictionnaire associant à chaque sommet atteignable
+                son prédécesseur sur le chemin minimal. 
+                La valeur `None` pour un sommet indique qu'il s'agit du sommet source.
+        """
         # Vérification pour s'assurer que `source` est de type Integral
         if not isinstance(source, Integral):
             raise TypeError("source must be of type Integral")
@@ -222,7 +266,9 @@ class Dijkstra (Player):
             current_vertex, current_distance = self.remove(min_heap)
 
             # Vérifiez que `current_vertex` et `current_distance` sont de type `Integral`
-            if not isinstance(current_vertex, Integral) or not isinstance(current_distance, Integral):
+            inte_instance_vertex = isinstance(current_vertex, Integral)
+            inte_instance_distance = isinstance(current_distance, Integral)
+            if not inte_instance_vertex or not inte_instance_distance:
                 raise TypeError("current_vertex and current_distance must be of type Integral")
 
             for neighbor in graph.get_neighbors(current_vertex):
@@ -241,33 +287,31 @@ class Dijkstra (Player):
                     min_heap = self.add_or_replace2(min_heap, neighbor, distance)
 
         return distances, routing_table
-    
+
     def find_route(self: Self,
         routing_table: Dict[Integral, Optional[Integral]],  # Table de routage générée par Dijkstra
         source: Integral,
         target: Integral
         ) -> List[Integral]:
-        
         """
         Cette fonction trouve le plus court chemin entre la source et la cible en utilisant
         la table de routage générée par Dijkstra.
         Args:
-        routing_table: Dictionnaire contenant le prédécesseur de chaque nœud dans le plus
+            routing_table: Dictionnaire contenant le prédécesseur de chaque nœud dans le plus
                     court chemin depuis la source.
-        source: Le nœud de départ.
-        target: Le nœud de destination.
+            source: Le nœud de départ.
+            target: Le nœud de destination.
         Returns:
-        Une liste représentant le chemin du nœud source au nœud cible.
+            Une liste représentant le chemin du nœud source au nœud cible.
         """
 
         # Vérification pour s'assurer que `source` et `target` sont de type Integral
         if not isinstance(source, Integral) or not isinstance(target, Integral):
             raise TypeError("source and target must be of type Integral")
-        
+
         # Initialiser `route` avec le type `Integral`
         route: List[Integral] = []
         current_vertex: Optional[Integral] = target  # Autorise `current` à être None
-
 
         # Trouver le chemin du nœud cible au nœud source
         while current_vertex is not None:
@@ -275,44 +319,27 @@ class Dijkstra (Player):
             current_vertex = routing_table[current_vertex]
 
         return route
-      
-#####################################################################################################################################################
-#####################################################################################################################################################
+#######################################################################################
+#######################################################################################
 
-if __name__=="__main__":
-    heap = {}
-    player = Dijkstra()
-    heap = player.add_or_replace2(heap, 1, 50)
-    print(heap)
-    heap2 = {1: 50, 2: 22, 3:90}
-    player.remove(heap2)
-    print(heap2)
+"""if __name__=="__main__":
+    dijkstra = Dijkstra()
 
-    """# Create a min-heap
-    heap = []
-    
-    # Add elements to the heap
-    heap.add_or_replace("A", 50)
-    heap.add_or_replace("B", 22)
-    heap.add_or_replace("C", 10)
+    # Exemple de file de priorité avec des entiers comme clés et valeurs
+    queue: Dict[Integral | int, Integral | None | int] = {1: 5, 2: 3, 3: 8}
 
-    # Show the elements of the heap
-    print("Heap initial state:", self.elements)
+    # Suppression de l'élément avec la plus petite valeur
+    key, value = dijkstra.remove(queue)
+    print(f"Removed: key={key}, value={value}")  # Attendu : key=2, value=3
+    print(f"Remaining queue: {queue}")  # Attendu : {1: 5, 3: 8}
 
-    # Remove the element with the smallest value
-    key, value = heap.remove()
-    print("Removed:", key, value)
-    print("Heap after remove():", heap.elements)
+    # Test avec une file vide
+    queue = {}
+    key, value = dijkstra.remove(queue)
+    print(f"Removed from empty queue: key={key}, value={value}")  # Attendu : key=None, value=None
 
-    # Add a new element to the heap
-    heap.add_or_replace("B", 45)
-    print("Heap after add_or_replace(B, 45):", heap.elements)
-
-    # Add a new element to the heap
-    heap.add_or_replace("A", 35)
-    print("Heap after add_or_replace(A, 35):", heap.elements)
-
-    # Remove the element with the smallest value
-    key, value = heap.remove()
-    print("Removed:", key, value)
-    print("Heap after remove():", heap.elements)"""
+    # Test avec des valeurs `None` dans le dictionnaire
+    queue = {1: None, 2: 4, 3: None}
+    key, value = dijkstra.remove(queue)
+    print(f"Removed with None values: key={key}, value={value}")  # Attendu : key=2, value=4
+    print(f"Remaining queue: {queue}")  # Attendu : {1: None, 3: None}"""

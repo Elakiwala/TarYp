@@ -4,7 +4,7 @@
 - Responsible of the documentation:  KHOURY
 - Responsible of the unit tests: HENRY
 
-
+---
 
 # Players
 
@@ -31,7 +31,7 @@ This project includes the implementation of a Dijkstra player, which is designed
     - traversal: Handles graphs with isolated vertices or unusual configurations like fully disconnected nodes.
     - find_route: Includes checks for invalid routes (e.g., when start and end vertices are not connected).
 
-
+---
 
 # Games
 
@@ -43,7 +43,7 @@ Maze size: Ranges from very small (2x2) to very large (20x20) for scalability te
 Wall and cell percentages: Adjusted to simulate mazes with different densities, from sparse to almost entirely filled with obstacles.
 These adjustments ensure that the player is robust and performs consistently across a variety of scenarios.>
 
-
+---
 
 # Unit tests
 
@@ -65,22 +65,21 @@ These adjustments ensure that the player is robust and performs consistently acr
     - Performance under extreme graph sizes.
     - Corner cases with dynamic graph updates during traversal (e.g., adding/removing edges).
 
-
+---
 
 # Utils
 
 No additional files were provided in the utils directory for this project. However, future iterations could include utility functions for maze generation or result visualization.
 
-
+---
 
 # Documentation
 
 The provided documentation is minimal and directly tied to the code comments. While functional, it could be expanded with:
     - Detailed explanations of the algorithms.
-    - Visual diagrams of the graph traversal process.
-    - Tutorials for setting up the project.
+    - Visual diagrams of the graph traversal process in our projet context.
 
-
+---
 
 # Others
 
