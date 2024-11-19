@@ -48,21 +48,20 @@ These adjustments ensure that the player is robust and performs consistently acr
 # Unit tests
 
 ## Tests designed:
-The DijkstraTests class includes:
-###
+### The DijkstraTests class includes:
     - test_add_or_replace2: Validates the behavior of the priority queue management under different scenarios, including edge cases with negative and zero values.
     - test_remove: Tests the extraction of the minimum element and handles cases like identical values or empty queues.
     - test_traversal: Verifies that the graph traversal correctly calculates distances and routing tables for various types of mazes.
     - test_find_route: Ensures that valid paths are found and handles edge cases like disconnected graphs or identical start and end vertices.
 
 ## Error cases tested:
-###
+### The DijkstraTests class includes:
     - Invalid keys in add_or_replace2 and remove.
     - Empty graph configurations in traversal.
     - Unreachable vertices in find_route.
 
 ## Missing tests:
-###
+### The DijkstraTests class doesn't includes:
     - Performance under extreme graph sizes.
     - Corner cases with dynamic graph updates during traversal (e.g., adding/removing edges).
 
