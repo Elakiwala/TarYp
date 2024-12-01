@@ -19,6 +19,7 @@ from numbers import *
 
 # PyRat imports
 from pyrat import Player, Maze, GameState, Action, Graph
+from Dijkstra import Dijkstra
 
 ##########################################################################################
 ###################################################################### CLASSES ###########
@@ -32,8 +33,6 @@ class Exhaustive(Player):
         Methods "preprocessing" and "postprocessing" are optional.
         Method "turn" is mandatory.
     """
-    LENGTH = 10**9
-    PATH = []
 
     #######################################################################################
     #                                                                CONSTRUCTOR          #
@@ -61,7 +60,7 @@ class Exhaustive(Player):
 
         # Inherit from parent class
         super().__init__(*args, **kwargs)
-
+        self.actions: List = []
         # Print phase of the game
         print("Constructor")
 
@@ -87,34 +86,34 @@ class Exhaustive(Player):
         """
 
         # Get the initial location of the player
+        print("initial_location")
         initial_location = game_state.player_locations[self.name]
 
-        #TODO => A modifier car en prend que le premier fromage
-        # Get the location of the cheese
-        cheese_location = game_state.cheese[0]
+        # Get the location of the cheeses
+        print("cheese_location")
+        cheese_location = game_state.cheese
 
-        #graph = Graph()
+        #Creation du nouveau graph
+        print("graph")
+        graphe = Graph()
 
-        #TODO => Modifier traversal(maze, initial_location, graph, cheese)->Graph pondéré/Metagraph
         # Perform a DFS traversal from the initial location
-        distances, routing_table = self.traversal(maze, initial_location)
+        print("ajout_sommet")
+        graphe = self.ajout_sommet(graphe, initial_location, cheese_location)
+        print("ponderation")
+        graphe, routing_table = self.ponderation(maze, graphe, initial_location, cheese_location)
 
         #Backtracking => Faire une routing table
-        """
-        Parcours – Dans les articles, nous vous proposons une approche basée
-        sur un parcours de graphe de recherche en profondeur. C’est encore
-        plus simple avec une implémentation récursive d’un DFS, par rapport
-        à celle que vous avez réalisée dans la session 2. Cette approche a
-        l’avantage de vous permettre d’intégrer des optimisations à différentes
-        étapes de la recherche.
-        """
+        print("tsp_backtracking")
+        best_path = self.tsp_backtracking(graphe, initial_location)
 
-        #TODO=> Faire une routing table commune à Dijkstra et Backtracking
         # Find the route from the initial location to the cheese location
-        route = self.find_route(routing_table, initial_location, cheese_location)
-
+        print("find_route")
+        #route = self.find_route(best_path, routing_table, initial_location)
         # Convert the route to actions
-        self.actions = maze.locations_to_actions(route)
+        print("locations_to_actions")
+
+        #self.actions = maze.locations_to_actions(route)
         # Print phase of the game
         print("Preprocessing")
 
@@ -141,96 +140,68 @@ class Exhaustive(Player):
 
         # Print phase of the game
         print("Turn", game_state.turn)
-
+        # Extract the next action to perform from self.actions
+        if self.actions:
+            action = self.actions.pop(0)
+        else:
+            action = Action.NOTHING
         # Return an action
-        return Action.NOTHING
+        return action
 
 ##############################################################################################
-
-    """
-    TODO:
-        - Faire la 
-    """
-
-    def traversal ( self:   Self,
-                graph:  Graph,
-                source: Integral
-              ) ->      Tuple[Dict[Integral, Integral], Dict[Integral, Optional[Integral]]]:
-
-        """
-            This method performs a DFS traversal of a graph.
-            It returns the explored vertices with associated 
-            distances.
-            It also returns the routing table, that is, the parent 
-            of each vertex in the traversal.
-            In:
-                * self:   Reference to the current object.
-                * graph:  The graph to traverse.
-                * source: The source vertex of the traversal.
-            Out:
-                * distances:     The distances from the source to each explored vertex.
-                * routing_table: The routing table, that is, 
-                the parent of each vertex in the traversal (None for the source).
-        """
-
-        # Initialize the distances and the routing table
-        distances = {source: 0}
-        routing_table = {source: None}
-
-        # Initialize the stack
-        stack = [source]
-
-        # While the stack is not empty
-        while stack:
-
-            # Pop the last vertex
-            vertex = stack.pop()
-            voisin = graph.get_neighbors(vertex)
-
-            # For each neighbor of the vertex
-            for i in range(len(voisin)):
-
-                # If the neighbor has not been explored yet
-                if voisin[i] not in distances:
-
-                    # Update the distance and the routing table
-                    distances[voisin[i]] = distances[vertex] + 1
-                    routing_table[voisin[i]] = vertex
-
-                    # Push the neighbor to the stack
-                    stack.append(voisin[i])
-
-        # Return the distances and the routing table
-        return distances, routing_table
-
-    @override
-    def find_route ( self:          Self,
-                 routing_table: Dict[Integral, Optional[Integral]],
-                 source:        Integral,
-                 target:        Integral
-               ) ->             List[Integral]:
-
-        """
-            This method finds the route from the source to the target using the routing table.
-            In:
-                * self:          Reference to the current object.
-                * routing_table: The routing table.
-                * source:        The source vertex.
-                * target:        The target vertex.
-            Out:
-                * route: The route from the source to the target.
-        """
-
-        # Your code here
-        route = []
-        current = target
-        while current != source:
-            route.append(current)
-            current = routing_table[current]
-        route.append(source)
-
-        return route[::-1]
+#STEP 1: Creation du méta graph
+    def ajout_sommet(self, graph, initial_location, cheeses):
+        #Ajout du sommet initial
+        graph.add_vertex(initial_location)
+        #Ajout des sommets des fromages
+        n = len(cheeses)
+        for i in range(n):
+            graph.add_vertex(cheeses[i])
+        return graph
     
+    def ponderation(self, maze, graph, initial_location, cheeses):
+        #Ajout des arêtes
+        routing_tables = {}
+        dijkstra = Dijkstra()
+        n = len(cheeses)
+        for i in range(n):
+            distance, routing_tab = dijkstra.traversal(maze, initial_location)
+            graph.add_edge(initial_location, cheeses[i], distance[cheeses[i]])
+            routing_tables[cheeses[i]] = routing_tab
+        return graph, routing_tables
+
+#STEP 2: TSP : backtracking
+    def tsp_backtracking(self, graph, start):
+        def dfs(current, visited, path, distance):
+            if len(visited) == len(graph.vertices):
+                return path, distance
+
+            min_distance = float('inf')
+            best_path = []
+
+            for neighbor in graph.vertices:
+                if neighbor not in visited:
+                    new_distance = distance + graph.get_weight(current, neighbor)
+                    dfs(neighbor, visited + {neighbor}, path + [neighbor], new_distance)
+
+                    if new_path_distance < min_distance:
+                        min_distance = new_path_distance
+                        best_path = new_path
+
+            return best_path, min_distance
+        
+        dfs(start, {start}, [start], 0)
+        return 0
+
+#STEP 3: Obtention du chemin final
+    #@override
+    def find_route (self, best_path, routing_tables, initial_location):
+        #Obtention du chemin final
+        path = [initial_location]
+        for i in range(len(best_path) - 1):
+            path += routing_tables[best_path[i]][best_path[i + 1]]
+        return path
+
     ###########################################################################################
 
     #@override
