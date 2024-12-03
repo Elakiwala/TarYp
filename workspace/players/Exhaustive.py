@@ -149,7 +149,7 @@ class Exhaustive(Player):
         return action
 
 ##############################################################################################
-#STEP 1: Creation du méta graph
+#STEP 1: Creation du méta-graph
     def ajout_sommet(self, graph, initial_location, cheeses):
         #Ajout du sommet initial
         graph.add_vertex(initial_location)
