@@ -20,7 +20,7 @@ from numbers import *
 # PyRat imports
 from pyrat import Player, Maze, GameState, Action, Graph
 from Dijkstra import Dijkstra
-
+from DFS import DFS
 ##########################################################################################
 ###################################################################### CLASSES ###########
 ##########################################################################################
@@ -171,27 +171,8 @@ class Exhaustive(Player):
         return graph, routing_tables
 
 #STEP 2: TSP : backtracking
-    def tsp_backtracking(self, graph, start):
-        def dfs(current, visited, path, distance):
-            if len(visited) == len(graph.vertices):
-                return path, distance
-
-            min_distance = float('inf')
-            best_path = []
-
-            for neighbor in graph.vertices:
-                if neighbor not in visited:
-                    new_distance = distance + graph.get_weight(current, neighbor)
-                    dfs(neighbor, visited + {neighbor}, path + [neighbor], new_distance)
-
-                    if new_path_distance < min_distance:
-                        min_distance = new_path_distance
-                        best_path = new_path
-
-            return best_path, min_distance
+    def tsp_bruteforce(self, remaining, vertex, path, weight, graph):
         
-        dfs(start, {start}, [start], 0)
-        return 0
 
 #STEP 3: Obtention du chemin final
     #@override

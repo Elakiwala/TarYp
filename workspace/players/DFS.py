@@ -40,7 +40,7 @@ class DFS (Player):
     def __init__ ( self:     Self,
                    *args:    Any,
                    **kwargs: Any
-                 ) ->        Self:
+                 ) ->        None:
 
         """
             This function is the constructor of the class.
@@ -155,7 +155,7 @@ class DFS (Player):
 
    
     # Your code here
-    @override
+    #@override
     def traversal ( self:   Self,
                 graph:  Graph,
                 source: Integral
@@ -207,7 +207,7 @@ class DFS (Player):
         # Return the distances and the routing table
         return distances, routing_table
 
-    @override
+    #@override
     def find_route ( self:          Self,
                  routing_table: Dict[Integral, Optional[Integral]],
                  source:        Integral,
