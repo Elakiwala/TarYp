@@ -94,10 +94,12 @@ class Dijkstra (Player):
         # Perform a Dijkstra traversal from the initial location
         print("Debut traversal")
         routing_table = self.traversal(maze, initial_location)[1]
+        print(routing_table)
         print("Fin traversal")
         # Find the route from the initial location to the cheese location
         print("Debut find_route")
         route = self.find_route(routing_table, initial_location, cheese_location)
+        print(route)
         print("Fin find_route")
         # Convert the route to actions
         print("Debut actions")
@@ -306,9 +308,9 @@ class Dijkstra (Player):
         """
 
         # Vérification pour s'assurer que `source` et `target` sont de type Integral
-        if not isinstance(source, Integral) or not isinstance(target, Integral):
+        """ if not isinstance(source, Integral) or not isinstance(target, Integral):
             raise TypeError("source and target must be of type Integral")
-
+        """
         # Initialiser `route` avec le type `Integral`
         route: List[Integral] = []
         current_vertex: Optional[Integral] = target  # Autorise `current` à être None
