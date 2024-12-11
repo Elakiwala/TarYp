@@ -20,8 +20,12 @@ from numbers import *
 # PyRat imports
 from pyrat import Player, Maze, GameState, Action, Graph
 from Dijkstra import Dijkstra
+<<<<<<< HEAD
 from itertools import permutations
 
+=======
+from DFS import DFS
+>>>>>>> refs/remotes/origin/main
 ##########################################################################################
 ###################################################################### CLASSES ###########
 ##########################################################################################
@@ -73,10 +77,27 @@ class Exhaustive(Player):
     def preprocessing(self, maze: Maze, game_state: GameState) -> None:
         print("Preprocessing phase")
 
+<<<<<<< HEAD
         # Initialisation des paramètres
+=======
+        """
+            This method redefines the method of the parent class.
+            It is called once at the beginning of the game.
+            In:
+                * self:       Reference to the current object.
+                * maze:       An object representing the maze in which the player plays.
+                * game_state: An object representing the state of the game.
+            Out:
+                * None.
+        """
+
+        # Get the initial location of the player
+        print("initial_location")
+>>>>>>> refs/remotes/origin/main
         initial_location = game_state.player_locations[self.name]
         cheese_location = game_state.cheese
 
+<<<<<<< HEAD
         print("Initialisation du graphe")
         graphe = self.ajout_sommet2({}, initial_location, cheese_location)
 
@@ -95,6 +116,33 @@ class Exhaustive(Player):
         print("route", route)
         print("Conversion de la route en actions")
         self.actions = maze.locations_to_actions(route)
+=======
+        # Get the location of the cheeses
+        print("cheese_location")
+        cheese_location = game_state.cheese
+
+        #Creation du nouveau graph
+        print("graph")
+        graphe = Graph()
+
+        # Perform a DFS traversal from the initial location
+        print("ajout_sommet")
+        graphe = self.ajout_sommet(graphe, initial_location, cheese_location)
+        print("ponderation")
+        graphe, routing_table = self.ponderation(maze, graphe, initial_location, cheese_location)
+
+        #Backtracking => Faire une routing table
+        print("tsp_backtracking")
+        best_path = self.tsp_backtracking(graphe, initial_location)
+
+        # Find the route from the initial location to the cheese location
+        print("find_route")
+        #route = self.find_route(best_path, routing_table, initial_location)
+        # Convert the route to actions
+        print("locations_to_actions")
+
+        #self.actions = maze.locations_to_actions(route)
+>>>>>>> refs/remotes/origin/main
         # Print phase of the game
         print("Preprocessing")
 
@@ -130,6 +178,7 @@ class Exhaustive(Player):
         return action
 
 ##############################################################################################
+<<<<<<< HEAD
 #STEP 1: Creation du méta graph
     def ajout_sommet2(self, graph: Dict, initial_location: Any, cheeses: List[Any]) -> Dict:
         graph[initial_location] = {}
@@ -214,6 +263,41 @@ class Exhaustive(Player):
                 chemin.append(route[i][j])
         return chemin
 
+=======
+#STEP 1: Creation du méta-graph
+    def ajout_sommet(self, graph, initial_location, cheeses):
+        #Ajout du sommet initial
+        graph.add_vertex(initial_location)
+        #Ajout des sommets des fromages
+        n = len(cheeses)
+        for i in range(n):
+            graph.add_vertex(cheeses[i])
+        return graph
+    
+    def ponderation(self, maze, graph, initial_location, cheeses):
+        #Ajout des arêtes
+        routing_tables = {}
+        dijkstra = Dijkstra()
+        n = len(cheeses)
+        for i in range(n):
+            distance, routing_tab = dijkstra.traversal(maze, initial_location)
+            graph.add_edge(initial_location, cheeses[i], distance[cheeses[i]])
+            routing_tables[cheeses[i]] = routing_tab
+        return graph, routing_tables
+
+#STEP 2: TSP : backtracking
+    def tsp_bruteforce(self, remaining, vertex, path, weight, graph):
+        
+
+#STEP 3: Obtention du chemin final
+    #@override
+    def find_route (self, best_path, routing_tables, initial_location):
+        #Obtention du chemin final
+        path = [initial_location]
+        for i in range(len(best_path) - 1):
+            path += routing_tables[best_path[i]][best_path[i + 1]]
+        return path
+>>>>>>> refs/remotes/origin/main
 
     ###########################################################################################
 
